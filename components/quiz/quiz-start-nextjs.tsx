@@ -16,13 +16,17 @@ import {
 } from "@/components/ui/select"
 import { SelectGroup, SelectLabel } from "@radix-ui/react-select"
 
-// Temporarily define subjects here if the import is not working
+// Temporarily define subjects here
 const subjects = {
   children: [
-    // Add your subject structure here
-    // For example:
-    // { name: 'React', url: 'reactjs', children: [...] },
-    // { name: 'JavaScript', url: 'javascript', children: [...] },
+    { name: 'React', url: 'reactjs', children: [
+      { name: 'Hooks', url: 'reactjs-hooks.mdx' },
+      { name: 'Components', url: 'reactjs-components.mdx' }
+    ] },
+    { name: 'JavaScript', url: 'javascript', children: [
+      { name: 'Basics', url: 'javascript-basics.mdx' },
+      { name: 'Advanced', url: 'javascript-advanced.mdx' }
+    ] },
   ]
 };
 
