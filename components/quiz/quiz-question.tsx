@@ -6,38 +6,61 @@ import { ToastAction } from '../ui/toast';
 import { MemoizedReactMarkdown } from '../markdown';
 import { UserMessage } from './message';
 
+type Message = {
+  id: number;
+  display: React.ReactNode;
+};
 
-// @ts-ignore
-export function QuizQuestion({ question, questionType, possibleAnswers, showAnswer, answer, explanation, source }) {
+type QuizQuestionProps = {
+  question: string;
+  questionType: 'multiple-choice' | 'single-choice';
+  possibleAnswers: string[];
+  showAnswer: boolean;
+  answer: string;
+  explanation?: string;
+  source?: string;
+};
+
+export function QuizQuestion({ 
+  question, 
+  questionType, 
+  possibleAnswers, 
+  showAnswer, 
+  answer, 
+  explanation, 
+  source 
+}: QuizQuestionProps) {
   const [answerUI, setAnswerUI] = useState<boolean>(false);
-  const toast = useToast();
-  const [selectedOption, setSelectedOption] = useState(questionType === 'multiple-choice' ? [] : '');
-  const [, setMessages] = useUIState<typeof AI>();
+  const { toast } = useToast();
+  const [selectedOption, setSelectedOption] = useState<string[] | string>(questionType === 'multiple-choice' ? [] : '');
+  const [messages, setMessages] = useUIState<typeof AI>();
   const { submitAnswer } = useActions<typeof AI>();
   const isMultipleChoice = questionType === 'multiple-choice';
-  const handleOptionChange = (e: any) => {
+
+  const handleOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (isMultipleChoice) {
       setSelectedOption(prev => 
-        // @ts-ignore
-        prev.includes(value) ? prev.filter(option => option !== value) : [...prev, value]
+        Array.isArray(prev)
+          ? prev.includes(value) ? prev.filter(option => option !== value) : [...prev, value]
+          : [value]
       );
     } else {
       setSelectedOption(value);
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isMultipleChoice && selectedOption.length === 0) {
-      toast.toast({
+    if (isMultipleChoice && Array.isArray(selectedOption) && selectedOption.length === 0) {
+      toast({
         title: "No option selected",
         description: "Please select at least one option.",
         action: <ToastAction altText="Okay">Okay</ToastAction>,
       });
       return;
     } else if (!isMultipleChoice && !selectedOption) {
-      toast.toast({
+      toast({
         title: "No option selected",
         description: "Please select an option.",
         action: <ToastAction altText="Okay">Okay</ToastAction>,
@@ -45,7 +68,7 @@ export function QuizQuestion({ question, questionType, possibleAnswers, showAnsw
       return;
     }
     // Add user message UI
-    setMessages(currentMessages => [
+    setMessages((currentMessages: Message[]) => [
       ...currentMessages,
       {
         id: Date.now(),
@@ -53,15 +76,13 @@ export function QuizQuestion({ question, questionType, possibleAnswers, showAnsw
       },
     ]);
 
-    // @ts-ignore
     const response = await submitAnswer(selectedOption);
     setAnswerUI(response.answerUI)
     // Insert a new system message to the UI.
-    setMessages(currentMessages => [
+    setMessages((currentMessages: Message[]) => [
       ...currentMessages,
       response.newMessage,
     ]);
-
   };
 
   return (
@@ -73,7 +94,6 @@ export function QuizQuestion({ question, questionType, possibleAnswers, showAnsw
       </div>
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          {/* @ts-ignore */}
           {possibleAnswers.map((option, index) => (
             <label key={index} className="flex items-center">
               <input
@@ -82,9 +102,9 @@ export function QuizQuestion({ question, questionType, possibleAnswers, showAnsw
                 type={isMultipleChoice ? "checkbox" : "radio"}
                 value={option}
                 onChange={handleOptionChange}
-                // For multiple choice, check if the option is included in the selected options
-                // @ts-ignore
-                checked={isMultipleChoice ? selectedOption.includes(option) : selectedOption === option}
+                checked={isMultipleChoice 
+                  ? Array.isArray(selectedOption) && selectedOption.includes(option)
+                  : selectedOption === option}
               />
               <span className="ml-2 prose">
                 <MemoizedReactMarkdown>
@@ -120,7 +140,6 @@ export function QuizQuestion({ question, questionType, possibleAnswers, showAnsw
             <p>{`The correct answer is: "${answer}".`}</p>
           </div>
         </div>
-
       )}
     </div>
   );
