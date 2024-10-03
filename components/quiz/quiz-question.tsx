@@ -68,7 +68,7 @@ export function QuizQuestion({
       return;
     }
     // Add user message UI
-    setMessages((currentMessages: Message[]) => [
+    setMessages((currentMessages: any) => [
       ...currentMessages,
       {
         id: Date.now(),
@@ -79,7 +79,7 @@ export function QuizQuestion({
     const response = await submitAnswer(selectedOption);
     setAnswerUI(response.answerUI)
     // Insert a new system message to the UI.
-    setMessages((currentMessages: Message[]) => [
+    setMessages((currentMessages: any) => [
       ...currentMessages,
       response.newMessage,
     ]);
