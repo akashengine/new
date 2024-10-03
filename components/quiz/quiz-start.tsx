@@ -20,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+
+// Define the type for a message
+type Message = {
+  id: number;
+  display: JSX.Element;
+};
+
 export function QuizStart({ topics = "reactjs", numberOfQuestions = 3 }) {
   const [startQuizUI, setStartQuizUI] = useState<boolean>(false);
   const [topic, setTopic] = useState(topics);
@@ -27,7 +34,6 @@ export function QuizStart({ topics = "reactjs", numberOfQuestions = 3 }) {
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [, setMessages] = useUIState<typeof AI>();
   const { startQuiz } = useActions<typeof AI>();
-  
 
   return (
     <Card className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -46,21 +52,20 @@ export function QuizStart({ topics = "reactjs", numberOfQuestions = 3 }) {
             <Select
               defaultValue={topic}
               onValueChange={(value) => {
-                setTopic(value)
+                setTopic(value);
               }}
             >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a topic" />
-            </SelectTrigger>
-            <SelectContent>
-              {subjects.map((subject) => (
-                <SelectItem
-                 className="classify" key={subject.topic} value={subject.topic}>
-                  {subject.topic}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a topic" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((subject) => (
+                  <SelectItem className="classify" key={subject.topic} value={subject.topic}>
+                    {subject.topic}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label className="text-gray-900 dark:text-gray-100" htmlFor="total-questions">
@@ -95,20 +100,25 @@ export function QuizStart({ topics = "reactjs", numberOfQuestions = 3 }) {
             onClick={async (e) => {
               e.preventDefault();
               // Add user message UI
-              setMessages(currentMessages => [
+              setMessages((currentMessages: Message[]) => [
                 ...currentMessages,
                 {
                   id: Date.now(),
-                  display: <UserMessage>
-                    {`A quiz with ${totalQuestions} questions on the topic of ${topic}. ${showCorrectAnswer ? "I want see the correct answer after each question." : ""}`}
-                  </UserMessage>,
+                  display: (
+                    <UserMessage>
+                      {`A quiz with ${totalQuestions} questions on the topic of ${topic}. ${
+                        showCorrectAnswer ? "I want to see the correct answer after each question." : ""
+                      }`}
+                    </UserMessage>
+                  ),
                 },
               ]);
 
               const response = await startQuiz(topic, totalQuestions, showCorrectAnswer);
               setStartQuizUI(response.startQuizUI);
+
               // Insert a new system message to the UI.
-              setMessages((currentMessages: any) => [
+              setMessages((currentMessages: Message[]) => [
                 ...currentMessages,
                 response.newMessage,
               ]);
@@ -119,5 +129,5 @@ export function QuizStart({ topics = "reactjs", numberOfQuestions = 3 }) {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
