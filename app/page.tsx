@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
 import { useUIState, useActions } from 'ai/rsc';
 import { UserMessage } from '@/components/quiz/message';
-
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import { FooterText } from '@/components/footer';
@@ -20,6 +18,11 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 
+type Message = {
+  id: number;
+  display: React.ReactNode;
+};
+
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
@@ -32,7 +35,7 @@ export default function Page() {
       if (e.key === '/') {
         if (
           e.target &&
-          ['INPUT', 'TEXTAREA'].includes((e.target as any).nodeName)
+          ['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).nodeName)
         ) {
           return;
         }
@@ -51,12 +54,12 @@ export default function Page() {
     };
   }, [inputRef]);
 
-  const onSubmit = async (e: any) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Blur focus on mobile
     if (window.innerWidth < 600) {
-      e.target['message']?.blur();
+      (e.target as HTMLFormElement)['message']?.blur();
     }
 
     const value = inputValue.trim();
@@ -64,7 +67,7 @@ export default function Page() {
     if (!value) return;
 
     // Add user message UI
-    setMessages(currentMessages => [
+    setMessages((currentMessages: Message[]) => [
       ...currentMessages,
       {
         id: Date.now(),
@@ -75,7 +78,7 @@ export default function Page() {
     try {
       // Submit and get response message
       const responseMessage = await submitUserMessage(value);
-      setMessages(currentMessages => [
+      setMessages((currentMessages: Message[]) => [
         ...currentMessages,
         responseMessage,
       ]);
@@ -94,9 +97,9 @@ export default function Page() {
           </>
         ) : (
           <EmptyScreen
-            submitMessage={async message => {
+            submitMessage={async (message: string) => {
               // Add user message UI
-              setMessages(currentMessages => [
+              setMessages((currentMessages: Message[]) => [
                 ...currentMessages,
                 {
                   id: Date.now(),
@@ -106,7 +109,7 @@ export default function Page() {
 
               // Submit and get response message
               const responseMessage = await submitUserMessage(message);
-              setMessages(currentMessages => [
+              setMessages((currentMessages: Message[]) => [
                 ...currentMessages,
                 responseMessage,
               ]);
@@ -129,7 +132,7 @@ export default function Page() {
                       variant="outline"
                       size="icon"
                       className="absolute left-0 w-8 h-8 p-0 rounded-full top-4 bg-background sm:left-4"
-                      onClick={e => {
+                      onClick={(e: React.MouseEvent) => {
                         e.preventDefault();
                         window.location.reload();
                       }}
@@ -153,7 +156,7 @@ export default function Page() {
                   name="message"
                   rows={1}
                   value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)}
                 />
                 <div className="absolute right-0 top-4 sm:right-4">
                   <Tooltip>
